@@ -1,5 +1,5 @@
 
-project_name = "EKSlab"
+project_name = "ekslab"
 region       = "us-east-1"
 
 ################################################################################
@@ -14,28 +14,31 @@ cluster = [
       authentication_mode                         = "API_AND_CONFIG_MAP"
       bootstrap_cluster_creator_admin_permissions = true
     }
+
     #Standard: This option supports the Kubernetes version for 14 months after the release date. There is no additional cost. When standard support ends, your cluster will be auto upgraded to the next version.
     #Extended: This option supports the Kubernetes version for 26 months after the release date. The extended support period has an additional hourly cost that begins after the standard support period ends. When extended support ends, your cluster will be auto upgraded to the next version.
     upgrade_policy_support_type = "STANDARD"
-    enabled_cluster_log_types   = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+
+    enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+
     addons = [ # https://docs.aws.amazon.com/eks/latest/userguide/eks-add-ons.html
       {
         name    = "vpc-cni"
-        version = "v1.19.5-eksbuild.1" # https://docs.aws.amazon.com/eks/latest/userguide/managing-vpc-cni.html
+        version = "v1.19.2-eksbuild.1" # https://docs.aws.amazon.com/eks/latest/userguide/managing-vpc-cni.html
       },
       {
         name    = "coredns"
-        version = "v1.12.1-eksbuild.2" # https://docs.aws.amazon.com/eks/latest/userguide/coredns.html
+        version = "v1.11.4-eksbuild.2" # https://docs.aws.amazon.com/eks/latest/userguide/coredns.html
       },
       {
         name    = "kube-proxy"
-        version = "v1.33.0-eksbuild.2" # https://docs.aws.amazon.com/eks/latest/userguide/managing-kube-proxy.html
-       }#,
-      # {
-      #   name    = "node-monitoring" # Does not support kubernetes version 133
-      #   version = "v1.4.0-eksbuild.2" # https://docs.aws.amazon.com/eks/latest/userguide/workloads-add-ons-available-eks.html#add-ons-eks-node-monitoring-agent
-      # }
-  ]}
+        version = "v1.32.0-eksbuild.2" # https://docs.aws.amazon.com/eks/latest/userguide/managing-kube-proxy.html
+      },
+      {
+        name    = "eks-node-monitoring-agent" # Does not support kubernetes version 133
+        version = "v1.4.0-eksbuild.2"         # https://docs.aws.amazon.com/eks/latest/userguide/workloads-add-ons-available-eks.html#add-ons-eks-node-monitoring-agent
+      }
+  ] }
 ]
 
 ################################################################################
@@ -43,15 +46,83 @@ cluster = [
 ################################################################################
 
 nodegroup = [
-  {
-    node_group_name    = "SPOT-Instances"
+  ####################### SPOT INSTANCES #########################
+
+  { # BOTTLEROCKET GRAVITON SPOT NODE GROUP
+    name_suffix        = "arm64-bottlerocket-spot"
+    instance_types     = ["t4g.small", "t4g.medium"] # "t3.large", "m5.xlarge", "m5.2xlarge"
+    ami_type           = "BOTTLEROCKET_ARM_64"
+    capacity_type      = "SPOT" # ON_DEMAND | SPOT | CAPACITY_BLOCK
+    auto_scale_options = [{ min = 1, max = 5, desired = 1 }]
+    labels = {
+      "ingress/ready" = "true"
+      "capatity/os"   = "BOTTLEROCKET"
+      "capatity/type" = "SPOT"
+      "capatity/arch" = "arm64"
+    }
+  },
+  { # BOTTLEROCKET x86_64 SPOT NODE GROUP
+    name_suffix        = "x86-bottlerocket-spot"
+    instance_types     = ["t3.small"] # "t3.large", "m5.xlarge", "m5.2xlarge"
+    ami_type           = "BOTTLEROCKET_x86_64"
+    capacity_type      = "SPOT" # ON_DEMAND | SPOT | CAPACITY_BLOCK
+    auto_scale_options = [{ min = 0, max = 3, desired = 1 }]
+    labels = {
+      "ingress/ready" = "true"
+      "capatity/os"   = "BOTTLEROCKET"
+      "capatity/type" = "SPOT"
+      "capatity/arch" = "x86_64"
+    }
+  },
+  { # SPOT NODE GROUP
+    name_suffix        = "x86-amazonlinux-spot"
     instance_types     = ["t3.small", "t3.medium"] # "t3.large", "m5.xlarge", "m5.2xlarge"
-    capacity_type      = "SPOT"
-    auto_scale_options = [{ min = 2, max = 3, desired = 2 }]
+    capacity_type      = "SPOT"                    # ON_DEMAND | SPOT | CAPACITY_BLOCK
+    auto_scale_options = [{ min = 0, max = 3, desired = 0 }]
     labels = {
       "ingress/ready" = "true"
       "capatity/os"   = "AMAZON_LINUX"
       "capatity/type" = "SPOT"
+      "capatity/arch" = "x86_64"
+    }
+  },
+  ####################### ON_DEMAND INSTANCES #########################
+
+  { # BOTTLEROCKET GRAVITON NODE GROUP
+    name_suffix        = "arm64-bottlerocket"
+    instance_types     = ["t4g.small", "t4g.medium"] # "t3.large", "m5.xlarge", "m5.2xlarge"
+    ami_type           = "BOTTLEROCKET_ARM_64"
+    capacity_type      = "ON_DEMAND" # ON_DEMAND | SPOT | CAPACITY_BLOCK
+    auto_scale_options = [{ min = 0, max = 3, desired = 0 }]
+    labels = {
+      "ingress/ready" = "true"
+      "capatity/os"   = "BOTTLEROCKET"
+      "capatity/type" = "ON_DEMAND"
+      "capatity/arch" = "arm64"
+    }
+  },
+  { # BOTTLEROCKET x86_64 ON_DEMAND NODE GROUP
+    name_suffix        = "x86-bottlerocket"
+    instance_types     = ["t3.small", "t3.medium"] # "t3.large", "m5.xlarge", "m5.2xlarge"
+    ami_type           = "BOTTLEROCKET_x86_64"
+    capacity_type      = "ON_DEMAND" # ON_DEMAND | SPOT | CAPACITY_BLOCK
+    auto_scale_options = [{ min = 0, max = 3, desired = 0 }]
+    labels = {
+      "ingress/ready" = "true"
+      "capatity/os"   = "BOTTLEROCKET"
+      "capatity/type" = "ON_DEMAND"
+      "capatity/arch" = "x86_64"
+    }
+  },
+  { # ON_DEMAND NODE GROUP
+    name_suffix        = "x86-amazonlinux"
+    instance_types     = ["t3.small", "t3.medium"] # "t3.large", "m5.xlarge", "m5.2xlarge"
+    capacity_type      = "ON_DEMAND"               # ON_DEMAND | SPOT | CAPACITY_BLOCK
+    auto_scale_options = [{ min = 0, max = 3, desired = 0 }]
+    labels = {
+      "ingress/ready" = "true"
+      "capatity/os"   = "AMAZON_LINUX"
+      "capatity/type" = "ON_DEMAND"
       "capatity/arch" = "x86_64"
     }
   }
