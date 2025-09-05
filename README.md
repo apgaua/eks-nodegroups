@@ -1,2 +1,4 @@
-# eks-multiple_node_groups
-Repo to separate node groups on EKS
+# EKS Cluster deployment module
+
+<!-- BEGIN_TF_DOCS -->
+<!-- END_TF_DOCS -->
