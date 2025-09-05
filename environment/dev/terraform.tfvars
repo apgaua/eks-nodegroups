@@ -30,11 +30,11 @@ cluster = [
       {
         name    = "kube-proxy"
         version = "v1.33.0-eksbuild.2" # https://docs.aws.amazon.com/eks/latest/userguide/managing-kube-proxy.html
-       },
-      {
-        name    = "node-monitoring"
-        version = "v1.4.0-eksbuild.2" # https://docs.aws.amazon.com/eks/latest/userguide/workloads-add-ons-available-eks.html#add-ons-eks-node-monitoring-agent
-      }
+       }#,
+      # {
+      #   name    = "node-monitoring" # Does not support kubernetes version 133
+      #   version = "v1.4.0-eksbuild.2" # https://docs.aws.amazon.com/eks/latest/userguide/workloads-add-ons-available-eks.html#add-ons-eks-node-monitoring-agent
+      # }
   ]}
 ]
 
